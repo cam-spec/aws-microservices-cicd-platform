@@ -23,7 +23,7 @@ diagrams/phase-1.1-high-level-architecture.png
 
 
 
-\## Phase 1.2 — Cost Estimate
+## Phase 1.2 — Cost Estimate
 
 \- \[Cost estimate artifacts](./phase-1.2-cost-estimate/README.md)
 
