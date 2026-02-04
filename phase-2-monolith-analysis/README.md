@@ -1,20 +1,10 @@
 ﻿# Phase 2 — Monolith Analysis
 
+This phase analyzes the existing monolithic Coffee Suppliers application before decomposing it into microservices.
 
+The purpose of this phase is to understand:
+- How the application is accessed
+- How users interact with it
+- Which URL routes map to application functionality
 
-\# Phase 2 — Monolithic Application Analysis
-
-
-
-This phase validates that the legacy monolithic Coffee Suppliers application is reachable and working as expected before refactoring into microservices.
-
-
-
-\## Tasks
-
-\- \*\*Task 2.1:\*\* Verify the monolithic application is publicly accessible.
-
-\- \*\*Task 2.2:\*\* Test the application and record key URL paths needed for microservice decomposition.
-
-
-
+These findings directly inform microservice boundaries in later phases.

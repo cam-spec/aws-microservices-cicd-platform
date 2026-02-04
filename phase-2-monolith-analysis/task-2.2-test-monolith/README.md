@@ -1,38 +1,16 @@
-\## Task 2.2 — Test the monolithic web application
+﻿## Task 2.2 — Test the monolithic web application
 
+### Objective
+Test the core functionality of the monolithic Coffee Suppliers application and observe URL routes.
 
+### Actions performed
+- Navigated to the suppliers list page (/suppliers)
+- Verified page rendering and navigation
+- Confirmed application functionality from the public EC2 endpoint
 
-\### Objective
+### Key observations
+- The application uses clear URL paths that map to features
+- These routes will later become individual microservices
 
-Test core CRUD functionality and record URL paths that map to application features (useful for microservice splitting later).
-
-
-
-\### Actions performed
-
-\- Opened the supplier list page and confirmed the URL path:
-
-&nbsp; - `/suppliers`
-
-\- Identified the add supplier flow path:
-
-&nbsp; - `/supplier-add`
-
-\- Noted the edit/update path pattern:
-
-&nbsp; - `/supplier-update/<id>`
-
-
-
-\### Result
-
-The supplier list page loads correctly and the app navigation confirms distinct URL routes that will later help define service boundaries.
-
-
-
-\### Evidence
-
-!\[Task 2.2 Evidence](task-2.2-monolith-suppliers-page.png)
-
-
-
+### Evidence
+![Suppliers page](task-2.2-monolith-suppliers.png)

@@ -1,34 +1,13 @@
-\## Task 2.1 — Verify monolithic application availability
+﻿## Task 2.1 — Verify monolithic application availability
 
+### Objective
+Confirm that the monolithic Coffee Suppliers application is publicly accessible from the internet.
 
+### Actions performed
+- Accessed the Amazon EC2 console
+- Identified the running MonolithicAppServer instance
+- Retrieved the public IPv4 address
+- Loaded the address using HTTP
 
-\### Objective
-
-Confirm the monolithic web application is publicly reachable via the EC2 public IPv4 address.
-
-
-
-\### Steps performed
-
-\- Opened the \*\*EC2 console\*\* in \*\*us-east-1\*\*.
-
-\- Located the instance named \*\*MonolithicAppServer\*\* and confirmed it was \*\*Running\*\*.
-
-\- Verified security group inbound access included \*\*HTTP (80)\*\*.
-
-\- Accessed the application using: `http://<PublicIPv4>`.
-
-
-
-\### Result
-
-The \*\*Monolithic Coffee Suppliers\*\* application loaded successfully in the browser.
-
-
-
-\### Evidence
-
-!\[Task 2.1 Evidence](task-2.1-monolith-home.png)
-
-
-
+### Result
+The Coffee Suppliers application loaded successfully, confirming correct EC2 networking and security group configuration.
