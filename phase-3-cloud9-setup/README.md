@@ -1,5 +1,3 @@
-﻿# Phase 3 — Cloud9 Setup
-
 # Phase 3 — Cloud9 Setup & Git Integration
 
 ## Overview
