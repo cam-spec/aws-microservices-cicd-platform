@@ -1,6 +1,6 @@
-﻿# aws-microservices-lab
+﻿# aws-microservices-project
 
-This repository documents an AWS microservices lab built in phases. Each phase folder contains notes, decisions, and artifacts (diagrams, configuration, scripts) produced during implementation.
+This repository documents an AWS microservices project built in phases. Each phase folder contains notes, decisions, and artefacts (diagrams, configuration, scripts) produced during implementation.
 
 ## Structure
 - phase-1-architecture/ — Architecture diagrams and design decisions (Phase 1.1, 1.2, etc.)
