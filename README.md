@@ -1,4 +1,4 @@
-﻿# aaws-ecs-microservices-deployment
+﻿# aws-ecs-microservices-deployment
 
 This repository documents an AWS microservices project built in phases. Each phase folder contains notes, decisions, and artefacts (diagrams, configuration, scripts) produced during implementation.
 
