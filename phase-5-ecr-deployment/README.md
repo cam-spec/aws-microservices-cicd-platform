@@ -1,10 +1,8 @@
 # Phase 5 — Amazon ECR Deployment
 
-This phase focused on preparing the two microservices for deployment by storing their container images in Amazon Elastic Container Registry (ECR).
+This phase focused on preparing the microservices for deployment by storing their Docker container images in Amazon Elastic Container Registry (ECR).
 
-After the customer and employee applications were containerised, the next step was to create private ECR repositories, tag the Docker images correctly, and push them to AWS.
-
-Storing the images in ECR made them available for later use in ECS task definitions and service deployment.
+Two private repositories were created in Amazon ECR to store the container images for the customer and employee microservices. The Docker images were tagged appropriately and pushed to the repositories.
 
 ## Tasks Completed
 
@@ -12,4 +10,4 @@ Storing the images in ECR made them available for later use in ECS task definiti
 - Task 5.2 — Tag container images
 - Task 5.3 — Push images to ECR
 
-By the end of this phase, both microservice container images had been uploaded to Amazon ECR and were ready for ECS deployment.
+By the end of this phase, both microservice images were stored in Amazon ECR and ready to be deployed to ECS.

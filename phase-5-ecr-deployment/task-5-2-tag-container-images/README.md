@@ -1,18 +1,12 @@
 # Task 5.2 — Tag Container Images
 
 ## Objective
-
-Prepare the local Docker images so they could be pushed to the correct Amazon ECR repositories.
+Tag the locally built Docker images so they can be pushed to the correct ECR repositories.
 
 ## Actions Performed
-
-- Reviewed the local Docker images for the customer and employee services
-- Applied the correct ECR repository tags to each image
-- Verified that the tagged images matched the expected repository naming format
+- Identified the locally built Docker images
+- Applied the appropriate ECR repository tags
+- Verified that the images were correctly tagged
 
 ## Result
-
-The local Docker images were tagged correctly and prepared for upload to Amazon ECR.
-
-## Evidence
-Add the relevant screenshots to the screenshots folder for this task.
+The Docker images were successfully prepared for upload to Amazon ECR.

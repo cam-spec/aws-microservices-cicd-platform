@@ -1,19 +1,12 @@
 # Task 5.1 — Create ECR Repositories
 
 ## Objective
-
-Create private Amazon ECR repositories for the customer and employee microservices.
+Create private repositories in Amazon Elastic Container Registry (ECR) to store the Docker images.
 
 ## Actions Performed
-
-- Opened Amazon ECR in the AWS Management Console
+- Navigated to Amazon ECR in the AWS console
 - Created a private repository for the customer microservice
 - Created a private repository for the employee microservice
-- Confirmed that both repositories were available for image upload
 
 ## Result
-
-The ECR repositories were created successfully and were ready to store the Docker images for both services.
-
-## Evidence
-Add the relevant screenshots to the screenshots folder for this task.
+Two ECR repositories were successfully created and prepared for Docker image uploads.
