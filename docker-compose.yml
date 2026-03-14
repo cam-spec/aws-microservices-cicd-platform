@@ -1,0 +1,12 @@
+services:
+  customer-service:
+    build: ./services/customer-service
+    container_name: customer-container
+    ports:
+      - "3000:3000"
+
+  employee-service:
+    build: ./services/employee-service
+    container_name: employee-container
+    ports:
+      - "4000:4000"

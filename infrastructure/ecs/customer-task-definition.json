@@ -1,0 +1,5 @@
+{
+  "family": "customer-service-task",
+  "networkMode": "awsvpc",
+  "containerDefinitions": []
+}
