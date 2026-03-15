@@ -9,4 +9,4 @@ services:
     build: ./services/employee-service
     container_name: employee-container
     ports:
-      - "4000:4000"
+      - "3001:3001"

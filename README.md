@@ -21,7 +21,7 @@ This project rebuilds an AWS microservices and CI/CD lab using a cleaner product
 ## Local Architecture
 The application is split into two Node.js microservices:
 - customer-service on port 3000
-- employee-service on port 4000
+- employee-service on port 3001
 
 ## Docker Compose
 Start both services with:
@@ -31,10 +31,12 @@ docker compose up --build -d
 ```
 
 ## Routes
-- http://localhost:3000
-- http://localhost:3000/suppliers
-- http://localhost:4000
-- http://localhost:4000/admin/suppliers
+- http://localhost:3000 — customer-service root
+- http://localhost:3000/health — customer-service health
+- http://localhost:3000/suppliers — customer-service suppliers
+- http://localhost:3001 — employee-service root
+- http://localhost:3001/health — employee-service health
+- http://localhost:3001/admin/suppliers — employee-service admin suppliers
 
 ## Current Progress
 - Microservices rebuilt locally

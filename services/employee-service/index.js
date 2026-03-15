@@ -1,16 +1,20 @@
 const express = require("express");
 const app = express();
 
+const PORT = process.env.PORT || 3001;
+
 app.get("/", (req, res) => {
   res.send("Employee Microservice Running");
 });
 
-app.get("/admin/suppliers", (req, res) => {
-  res.send("Employee supplier management");
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", service: "employee-service" });
 });
 
-const PORT = 4000;
+app.get("/admin/suppliers", (req, res) => {
+  res.json({ message: "Employee supplier management" });
+});
 
 app.listen(PORT, () => {
-  console.log("Employee service running on port " + PORT);
+  console.log(`Employee service running on port ${PORT}`);
 });
