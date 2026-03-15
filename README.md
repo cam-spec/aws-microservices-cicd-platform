@@ -57,6 +57,19 @@ The final architecture illustrates how the system runs on AWS using containerize
 
 In production, **customer-service** runs on port 3000 and **employee-service** on port 3001; both are containerized with Docker and run on Amazon ECS. An Application Load Balancer routes requests to the appropriate service by path. Deployments are automated via **CodePipeline** (orchestration) and **CodeDeploy** (ECS blue/green).
 
+## Runtime Request Flow
+
+1. A client sends a request to the Application Load Balancer.
+2. The load balancer routes traffic to the appropriate ECS service.
+3. The request is forwarded to the container running the target microservice.
+4. The service processes the request and returns a JSON response.
+5. CI/CD pipelines automatically deploy updates to ECS using blue/green deployment strategies.
+
+Example routes:
+
+GET /customers  
+GET /employees
+
 ## Quick Start
 
 From the repository root (Windows/PowerShell):
