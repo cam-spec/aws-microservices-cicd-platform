@@ -1,6 +1,4 @@
-# AppSpec for employee-service ECS blue/green deployment (CodeDeploy).
-# TaskDefinition is provided by CodePipeline at deploy time.
-version: 0.0
+version: 1.0
 
 Resources:
   - TargetService:
