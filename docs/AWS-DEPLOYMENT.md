@@ -6,7 +6,13 @@ This document describes how the **aws-microservices-ci-cd-pipeline** project is 
 
 ---
 
-## 2. AWS Services Used
+## 2. Architecture Summary
+
+Traffic flows from the client to an **Application Load Balancer (ALB)**, which routes by path to the appropriate **ECS** service. Two ECS services run the containerized applications: **customer-service** on port 3000 and **employee-service** on port 3001. Each ECS service runs tasks from a task definition that references images stored in **ECR**. The pipeline (CodeBuild, CodePipeline, CodeDeploy) builds images from the service directories, pushes them to ECR, and deploys new task revisions to ECS so that traffic is shifted to the updated tasks. For a full system diagram and component details, see `docs/ARCHITECTURE.md`.
+
+---
+
+## 3. AWS Services Used
 
 | Service | Role in this project |
 |---------|------------------------|
@@ -23,7 +29,7 @@ Other services (e.g. Parameter Store, CloudWatch) may be used for configuration 
 
 ---
 
-## 3. Deployment Flow
+## 4. Deployment Flow
 
 1. **Source** — CodePipeline pulls the application code from the connected repository (e.g. GitHub or CodeCommit).
 2. **Build** — CodeBuild runs `cicd/buildspec.yml`: logs in to ECR, builds customer-service and employee-service Docker images, tags them (commit SHA and `latest`), pushes to ECR, and writes `build/imagedefinitions.json`.
@@ -34,7 +40,7 @@ End-to-end: **Source → Build → Deploy**. Each run is tied to a specific sour
 
 ---
 
-## 4. Container Image Flow
+## 5. Container Image Flow
 
 - **Build** — CodeBuild builds two images from `services/customer-service` and `services/employee-service` using the Dockerfiles in those directories. Each image is tagged with the ECR repository name plus a commit-based tag (e.g. 7-char SHA) and `latest`.
 - **Push** — Both tags per image are pushed to the corresponding ECR repository (`customer-service`, `employee-service`). Authentication uses IAM (`aws ecr get-login-password` + `docker login`); no long-lived credentials are stored.
@@ -44,7 +50,7 @@ Images are built once per pipeline run and stored in ECR; the same image URIs ar
 
 ---
 
-## 5. ECS Deployment Model
+## 6. ECS Deployment Model
 
 - **Two ECS services** — One for customer-service, one for employee-service. Each service runs tasks from a task definition that specifies the container image (from ECR), container name (`customer-service` or `employee-service`), and container port (3000 or 3001).
 - **Task definitions** — Container names and ports must match the AppSpecs and ALB target groups: customer-service on 3000, employee-service on 3001. The pipeline injects the new image URI (from `imagedefinitions.json`) when creating a new task definition revision.
@@ -54,7 +60,7 @@ The pipeline assumes ECS cluster, services, and task definitions (or a mechanism
 
 ---
 
-## 6. Load Balancer Routing Concept
+## 7. Load Balancer Routing Concept
 
 - **Single ALB** — One Application Load Balancer receives external traffic. Listener rules route by path to the appropriate target group.
 - **Routing** — `/` and `/suppliers` → target group for customer-service (port 3000). `/admin/suppliers` → target group for employee-service (port 3001). Health checks use `/health` on each service.
@@ -64,16 +70,16 @@ Path-based routing is done at the ALB; no API Gateway is required for this desig
 
 ---
 
-## 7. CI/CD Handoff
+## 8. CI/CD Handoff
 
 - **Build → Deploy** — The only artifact passed from build to deploy is `build/imagedefinitions.json`, which contains the ECR image URI for each service name. No separate “deploy package” is produced; the deploy stage uses these URIs to create or select the new ECS task definition revision(s) and then invokes CodeDeploy with the appropriate AppSpec.
 - **AppSpecs** — Task definition ARNs in the AppSpecs are placeholders; the pipeline (or a preceding step) injects the actual ARN when running the deployment. Container names and ports in the AppSpecs (customer-service:3000, employee-service:3001) must match the task definitions and target groups so that health checks and routing work correctly.
 
-The pipeline does not provision ECR repos, ECS cluster, ALB, or target groups; it assumes they exist and updates ECS services with new task revisions and image URIs.
+The pipeline assumes ECR repos, ECS cluster, ALB, and target groups already exist. In a typical AWS setup, this infrastructure would be created using Infrastructure-as-Code (e.g. AWS CloudFormation or Terraform) rather than by the pipeline itself; the pipeline then updates ECS services with new task revisions and image URIs.
 
 ---
 
-## 8. Assumptions and Notes
+## 9. Assumptions and Notes
 
 - ECR repositories `customer-service` and `employee-service` exist in the same account and region as the pipeline.
 - ECS cluster, two ECS services, task definitions (with correct container names and ports), ALB, and target groups are created outside the pipeline or by separate automation.
@@ -84,7 +90,7 @@ The pipeline does not provision ECR repos, ECS cluster, ALB, or target groups; i
 
 ---
 
-## 9. Limitations of Reconstructed Environment
+## 10. Limitations of Reconstructed Environment
 
 - **No live AWS run guarantee** — The buildspec, AppSpecs, and docs were reconstructed from lab phases and repo layout; they have not necessarily been executed end-to-end in an AWS account in this exact form. Wiring CodePipeline to a repo and running a full build and deploy may require environment-specific adjustments (e.g. account ID, region, resource names, IAM).
 - **Infrastructure not in repo** — ECR repos, ECS cluster, services, task definitions, ALB, target groups, and listener rules are not defined in this repository. They must be created separately (console, CloudFormation, Terraform, or similar) before the pipeline can deploy successfully.
@@ -95,7 +101,7 @@ These limitations are noted so that the document remains credible and useful for
 
 ---
 
-## 10. Future Improvements
+## 11. Future Improvements
 
 - **Infrastructure as Code** — Add CloudFormation or Terraform (or similar) to define ECR repos, ECS cluster, services, task definitions, ALB, and target groups so that the full stack is reproducible.
 - **Pipeline creation as Code** — Define CodePipeline, CodeBuild project, and CodeDeploy application in code so that the CI/CD pipeline itself is versioned and repeatable.
@@ -104,3 +110,13 @@ These limitations are noted so that the document remains credible and useful for
 - **Rollback** — Document or automate rollback (e.g. previous task definition revision) if a deployment fails or is found to be faulty.
 
 These improvements would build on the current design (build → ECR → ECS + CodeDeploy, path-based ALB routing) without changing the core deployment flow.
+
+---
+
+## 12. Deployment Readiness
+
+The project demonstrates container-based CI/CD concepts: local and Docker verification, buildspec-driven image build and ECR push, deployment artifact (`imagedefinitions.json`), and AppSpec-driven ECS blue/green deployment with path-based ALB routing. The pipeline structure, container ports (customer-service:3000, employee-service:3001), and handoffs are defined in the repository.
+
+Infrastructure (ECR repos, ECS cluster, services, task definitions, ALB, target groups) is not defined in this repo and is assumed to exist or to be created separately. With Infrastructure-as-Code (e.g. CloudFormation or Terraform) added to define that infrastructure, the system could be deployed end-to-end in AWS with minimal modification to the existing pipeline and service code.
+
+The repository therefore serves as both a learning reference for container CI/CD pipelines and a template for AWS microservice deployments.

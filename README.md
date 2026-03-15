@@ -3,6 +3,29 @@
 ## Overview
 This project rebuilds an AWS microservices and CI/CD lab using a cleaner production-style structure. The repository also documents the project built in phases; each phase folder contains notes, decisions, and artefacts (diagrams, configuration, scripts) produced during implementation.
 
+## Architecture Summary
+
+The system follows a container-based microservices deployment model:
+
+```
+Client
+   │
+   ▼
+Application Load Balancer
+   │
+   ├── customer-service (ECS task, port 3000)
+   │
+   └── employee-service (ECS task, port 3001)
+```
+
+CodePipeline orchestrates the CI/CD workflow:
+**Source → CodeBuild → ECR → ECS deployment via CodeDeploy.**
+
+Images are built from the services directories and stored in Amazon ECR.
+ECS services pull images from ECR during deployments and register with the ALB target groups.
+
+See `docs/ARCHITECTURE.md` for the full system diagram.
+
 ## Structure
 - phase-1-architecture/ — Architecture diagrams and design decisions (Phase 1.1, 1.2, etc.)
 - phase-2-monolith-analysis/ — Analysis + testing notes for the monolithic application
