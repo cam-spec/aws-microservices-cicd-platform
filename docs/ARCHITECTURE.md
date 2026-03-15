@@ -6,7 +6,23 @@ This document describes the architecture of the **aws-microservices-ci-cd-pipeli
 
 ---
 
-## 2. System Components
+## 2. Architecture Goals
+
+The architecture is designed to demonstrate a practical AWS microservices deployment pipeline using containerized services.
+
+Key goals of the system design:
+
+- Separate public and administrative responsibilities into independent services.
+- Package services as Docker containers for consistent local and cloud execution.
+- Use AWS managed services (ECR, ECS, ALB) for scalable container orchestration.
+- Implement a CI/CD pipeline that builds, stores, and deploys container images automatically.
+- Maintain clear traceability from source commit → container image → ECS deployment.
+
+The project prioritizes clarity of deployment flow and DevOps practices rather than application complexity.
+
+---
+
+## 3. System Components
 
 | Component | Role |
 |-----------|------|
@@ -22,7 +38,7 @@ This document describes the architecture of the **aws-microservices-ci-cd-pipeli
 
 ---
 
-## 3. Service Responsibilities
+## 4. Service Responsibilities
 
 ### customer-service (port 3000)
 
@@ -40,7 +56,7 @@ Separation allows independent scaling, clearer security boundaries, and separate
 
 ---
 
-## 4. Local Architecture
+## 5. Local Architecture
 
 - **Runtime** — Node.js (e.g. 20); each service runs via `npm start` or `node index.js`.
 - **Ports** — customer-service on 3000, employee-service on 3001. Ports are configurable via `process.env.PORT` with these defaults.
@@ -50,38 +66,27 @@ Separation allows independent scaling, clearer security boundaries, and separate
 
 ---
 
-## 5. Intended AWS Deployment Architecture
+## 6. Intended AWS Deployment Architecture
+
+Deployment flow: **CodePipeline → CodeBuild → ECR → ECS → ALB → External Clients.**
 
 ```
-                    ┌─────────────────┐
-                    │   CodePipeline  │
-                    │  (Source → Build → Deploy)
-                    └────────┬────────┘
-                             │
-         ┌──────────────────┼──────────────────┐
-         │                  │                  │
-         ▼                  ▼                  ▼
-   ┌──────────┐      ┌──────────┐      ┌─────────────┐
-   │ CodeBuild│      │   ECR    │      │ CodeDeploy  │
-   │ (buildspec)      │ (images) │      │ (appspecs)  │
-   └────┬─────┘      └────┬─────┘      └──────┬──────┘
-        │                 │                    │
-        └─────────────────┴────────────────────┘
-                          │
-                          ▼
-                   ┌─────────────┐
-                   │    ECS      │
-                   │ (2 services)│
-                   └──────┬──────┘
-                          │
-                          ▼
-                   ┌─────────────┐
-                   │    ALB      │
-                   │ (path-based│
-                   │  routing)  │
-                   └──────┬──────┘
-                          │
-                    [ External traffic ]
+     CodePipeline (Source → Build → Deploy)
+                    │
+                    ▼
+              CodeBuild (builds Docker images)
+                    │
+                    ▼
+              ECR (container registry)
+                    │
+                    ▼
+              ECS (customer-service + employee-service)
+                    │
+                    ▼
+              ALB (path-based routing)
+                    │
+                    ▼
+              External Clients
 ```
 
 - **ECR** — Two repositories (`customer-service`, `employee-service`). CodeBuild pushes tagged images; ECS pulls by image URI from the deployment artifact.
@@ -91,7 +96,7 @@ Separation allows independent scaling, clearer security boundaries, and separate
 
 ---
 
-## 6. Request Routing
+## 7. Request Routing
 
 | Path | Target service | Port | Purpose |
 |------|----------------|------|---------|
@@ -103,7 +108,7 @@ Health checks use `/health` on each service (3000 and 3001). The ALB listener ru
 
 ---
 
-## 7. CI/CD Relationship to Architecture
+## 8. CI/CD Relationship to Architecture
 
 - **Source** — Pipeline pulls from the repo (e.g. GitHub). The same codebase produces both service images.
 - **Build** — CodeBuild runs `cicd/buildspec.yml`: builds both Docker images, tags with commit SHA and `latest`, pushes to ECR, writes `build/imagedefinitions.json` with image URIs by service name. The artifact is the only handoff to deploy.
@@ -113,7 +118,7 @@ CI/CD does not change the runtime architecture (two services, two ports, path-ba
 
 ---
 
-## 8. Design Decisions
+## 9. Design Decisions
 
 - **Two services, two ports** — Clear boundary between customer-facing and admin; simplifies routing and future scaling.
 - **Single repo, two images** — One codebase and one pipeline; both images built and tagged together from the same commit.
@@ -124,7 +129,7 @@ CI/CD does not change the runtime architecture (two services, two ports, path-ba
 
 ---
 
-## 9. Assumptions
+## 10. Assumptions
 
 - ECR repositories exist for both services in the same account/region as the pipeline.
 - ECS cluster, service definitions, task definitions (with container names `customer-service` and `employee-service` and ports 3000 and 3001), and ALB with target groups and listener rules are created outside the pipeline or by separate automation.
@@ -134,7 +139,21 @@ CI/CD does not change the runtime architecture (two services, two ports, path-ba
 
 ---
 
-## 10. Future Architectural Improvements
+
+## 11. Scalability Considerations
+
+The architecture allows independent scaling of the two services.
+
+Because each service runs as its own ECS service:
+
+- customer-service can scale based on public traffic volume.
+- employee-service can scale separately based on administrative workload.
+
+ECS services can increase or decrease the number of running tasks automatically using ECS Service Auto Scaling.
+
+The ALB distributes requests across healthy tasks in each target group, allowing horizontal scaling without changes to the application code.
+
+## 12. Future Architectural Improvements
 
 - **API Gateway** — Optional front door for versioning, throttling, or request validation before the ALB.
 - **Service-to-service** — If employee-service or customer-service need to call each other, introduce service discovery (e.g. Cloud Map) or internal ALB/route patterns and document the new flows.
