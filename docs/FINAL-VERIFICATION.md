@@ -1,82 +1,102 @@
 # Final Verification
 
-This document records the final verification of the **aws-microservices-ci-cd-pipeline** project: local service execution, endpoint tests, and Docker Compose runs. It also records the port conflict on 3001, its resolution, and the final status of the system.
+## 1. Verification Objective
+
+Confirm that both Node.js microservices (customer-service and employee-service) run correctly locally and under Docker Compose, that all required endpoints respond as designed, and that the setup is ready for ECR, ECS, and pipeline integration.
 
 ---
 
-## Local Service Verification
+## 2. Local Service Verification
 
-Both microservices were run locally (without Docker) to confirm application logic and routing:
-
-- **customer-service** — Started with `npm start` (or `node index.js`), bound to port **3000**.
-- **employee-service** — Started with `npm start` (or `node index.js`), bound to port **3001**.
-
-Each service was tested against its root, health, and domain endpoints. No failures were observed during local verification.
+- **customer-service** — Started with `npm start` (or `node index.js`), bound to port **3000**. Root, health, and domain endpoints exercised; no failures.
+- **employee-service** — Started with `npm start` (or `node index.js`), bound to port **3001**. Root, health, and domain endpoints exercised; no failures.
 
 ---
 
-## Endpoint Tests
+## 3. Endpoint Checklist
 
 ### customer-service (port 3000)
 
-| Endpoint    | Method | Expected behavior                                               | Result |
-|------------|--------|-----------------------------------------------------------------|--------|
-| `/`        | GET    | Service identification message                                  | Pass   |
-| `/health`  | GET    | `{ "status": "ok", "service": "customer-service" }`            | Pass   |
-| `/suppliers` | GET  | Supplier list or placeholder response                          | Pass   |
+| Endpoint     | Method | Result |
+|-------------|--------|--------|
+| `/`         | GET    | Pass   |
+| `/health`   | GET    | Pass   |
+| `/suppliers`| GET    | Pass   |
 
 ### employee-service (port 3001)
 
-| Endpoint           | Method | Expected behavior                                               | Result |
-|--------------------|--------|-----------------------------------------------------------------|--------|
-| `/`                | GET    | Service identification message                                  | Pass   |
-| `/health`          | GET    | `{ "status": "ok", "service": "employee-service" }`          | Pass   |
-| `/admin/suppliers` | GET    | Admin supplier management response                              | Pass   |
+| Endpoint           | Method | Result |
+|--------------------|--------|--------|
+| `/`                | GET    | Pass   |
+| `/health`          | GET    | Pass   |
+| `/admin/suppliers` | GET    | Pass   |
 
-All listed endpoints returned the expected status and content.
+All endpoints returned expected status and content.
 
 ---
 
-## Docker Compose Verification
-
-Both services were built and run as containers using Docker Compose:
+## 4. Docker Compose Verification
 
 ```bash
 docker compose up --build -d
 ```
 
-- **customer-service** — Image built from `services/customer-service`, container port 3000 mapped to host port 3000.
-- **employee-service** — Image built from `services/employee-service`, container port 3001 mapped to host port 3001.
+- **customer-service** — Built from `services/customer-service`; container port 3000 mapped to host 3000.
+- **employee-service** — Built from `services/employee-service`; container port 3001 mapped to host 3001.
 
-After the containers were running, the same endpoints were tested at `http://localhost:3000` and `http://localhost:3001`. Responses matched the local (non-Docker) runs. Containers were stopped with `docker compose down` with no errors.
-
----
-
-## Issue Encountered (Port Conflict on 3001)
-
-On the first attempt to run Docker Compose, **employee-service** did not start or bind correctly.
-
-**Root cause:** A local Node process was already listening on port **3001**. Docker Compose maps the employee-service container port 3001 to host port 3001, so that host port must be available. The conflict prevented the container from binding.
+Same endpoints tested at `http://localhost:3000` and `http://localhost:3001`; behavior matched local runs. Containers stopped with `docker compose down`; no errors.
 
 ---
 
-## Resolution
+## 5. Issue Encountered
 
-1. The process using port 3001 on the host was identified (e.g. a previously started employee-service or another application).
-2. That process was stopped so that port 3001 was released.
-3. `docker compose up --build -d` was run again. Both images built successfully and both containers started.
-4. Endpoint tests were repeated against the containers; all results matched the local verification.
+On the first run of Docker Compose, **employee-service** did not start or bind correctly.
 
 ---
 
-## Final Status of the System
+## 6. Root Cause
 
-| Component              | Status  | Notes |
-|------------------------|---------|--------|
-| customer-service (local) | Pass  | Port 3000; `/`, `/health`, `/suppliers` verified. |
-| employee-service (local) | Pass  | Port 3001; `/`, `/health`, `/admin/suppliers` verified. |
-| Docker builds          | Pass  | Both Dockerfiles build without error. |
-| Docker Compose         | Pass  | Both containers run after resolving port 3001 conflict. |
-| Endpoint parity        | Pass  | Container behavior matches local behavior. |
+A local Node process was already listening on port **3001**. Docker Compose maps the employee-service container port 3001 to host port 3001; the host port must be free. The conflict prevented the container from binding.
 
-Verification is complete. The system is ready for the next phase: ECR push, ECS task definitions, and pipeline integration. See `docs/CICD-PIPELINE.md` and `README.md` for pipeline design and project status.
+---
+
+## 7. Resolution
+
+1. Identified and stopped the process using port 3001 on the host.
+2. Re-ran `docker compose up --build -d`. Both images built and both containers started.
+3. Re-ran endpoint tests against the containers; results matched local verification.
+
+---
+
+## 8. Final Status
+
+| Component               | Status | Notes |
+|-------------------------|--------|--------|
+| customer-service (local)| Pass   | Port 3000; `/`, `/health`, `/suppliers` verified. |
+| employee-service (local)| Pass   | Port 3001; `/`, `/health`, `/admin/suppliers` verified. |
+| Docker builds           | Pass   | Both Dockerfiles build without error. |
+| Docker Compose          | Pass   | Both containers run after resolving port 3001 conflict. |
+| Endpoint parity         | Pass   | Container behavior matches local behavior. |
+
+Verification complete. System ready for ECR push, ECS task definitions, and pipeline integration.
+
+---
+
+## 9. Evidence Captured
+
+- Endpoint responses for both services (root, health, domain routes).
+- Docker Compose build and run logs (successful build and start of both containers).
+- Confirmation that releasing port 3001 resolved the conflict.
+
+Screenshots or log excerpts can be added here for portfolio or audit use.
+
+---
+
+## 10. Next Phase
+
+1. **ECR** — Create repositories; push images (or run CodeBuild buildspec) to validate ECR.
+2. **ECS** — Finalize task definitions (container names and ports aligned with AppSpecs); run services on ECS.
+3. **ALB** — Configure listener rules: `/` and `/suppliers` → customer-service:3000; `/admin/suppliers` → employee-service:3001.
+4. **Pipeline** — Connect CodePipeline to the repo; run build and deploy to confirm end-to-end CI/CD.
+
+See `docs/CICD-PIPELINE.md` and `README.md` for pipeline design and project status.
