@@ -1,4 +1,5 @@
 # AWS Microservices CI/CD Pipeline
+Production-style microservices architecture demonstrating service decomposition, container orchestration, and automated deployment pipelines on AWS.
 
 ## Overview
 
