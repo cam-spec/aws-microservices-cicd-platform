@@ -14,7 +14,7 @@ The pipeline aims to:
 - Tag images for traceability (short commit SHA and `latest`).
 - Push images to Amazon ECR using IAM-based authentication (no long-lived credentials).
 - Produce a deployment artifact (`imagedefinitions.json`) for downstream ECS task definition updates.
-- Support ECS deployments (blue/green or rolling) via CodeDeploy using AppSpec files.
+- Support ECS blue/green deployments via CodeDeploy using AppSpec files.
 
 Each run is tied to a specific source revision so that builds and deployments are reproducible.
 
@@ -36,9 +36,9 @@ Both services expose a root, a health endpoint (JSON), and a domain route. Local
 1. **Source** — CodePipeline connects to the repo (e.g. GitHub or CodeCommit), watches a branch (typically `main`), and clones the repository into the build environment on each run.
 2. **Build** — CodeBuild runs `cicd/buildspec.yml`: ECR login, Docker build for both services, tag with commit SHA and `latest`, push to ECR, and write `build/imagedefinitions.json`.
 3. **Artifact** — The build output (including `imagedefinitions.json`) is passed to the deployment stage.
-4. **Deploy** — The pipeline uses the artifact and the AppSpec files to create or update ECS task definition revisions and run CodeDeploy; traffic is shifted to the new tasks.
+4. **Deploy** — In the intended flow, the pipeline uses the artifact and the AppSpec files to create or update ECS task definition revisions and run CodeDeploy; traffic is then shifted to the new tasks.
 
-Flow: **Source → Build → Deploy**. No manual steps in the happy path.
+Flow: **Source → Build → Deploy**. In the intended AWS pipeline flow, the happy path is designed to run without manual intervention.
 
 ---
 
@@ -69,13 +69,13 @@ The push is part of the buildspec’s `post_build` phase. The result is two ECR 
 
 ## 7. Deployment Stage
 
-The deployment stage uses the build artifact and the AppSpec files to update **Amazon ECS**:
+In the intended design, the deployment stage uses the build artifact and the AppSpec files to update **Amazon ECS**:
 
 1. A **new task definition revision** is created (or updated) with the image URIs from `imagedefinitions.json`. Each entry maps a service name (`customer-service`, `employee-service`) to an ECR image URI.
-2. **CodeDeploy** runs a deployment for each ECS service. Customer-service uses **`cicd/appspec-customer.yaml`**; employee-service uses **`cicd/appspec-employee.yaml`**. Each AppSpec has one TargetService: task definition ARN (injected by the pipeline at deploy time), container name, and container port for the load balancer. For ECS, AppSpec files use **version 0.0** (required by CodeDeploy).
-3. Traffic is shifted from the old tasks to the new ones (blue/green or rolling). The **Application Load Balancer** targets the containers on port 3000 (customer-service) and 3001 (employee-service), as specified in the AppSpecs and in the ECS task definitions.
+2. **CodeDeploy** runs an ECS blue/green deployment for each ECS service. Customer-service uses **`cicd/appspec-customer.yaml`**; employee-service uses **`cicd/appspec-employee.yaml`**. Each AppSpec has one TargetService: task definition ARN (injected by the pipeline at deploy time), container name, and container port for the load balancer. For ECS, AppSpec files use **version 0.0** (required by CodeDeploy).
+3. Traffic is shifted from the old tasks to the new ones. The **Application Load Balancer** targets the containers on port 3000 (customer-service) and 3001 (employee-service), as specified in the AppSpecs and in the ECS task definitions.
 
-The pipeline assumes ECS services and ALB target groups already exist; the deploy stage updates the services with the new task revision and shifts traffic accordingly.
+The design assumes ECS services and ALB target groups already exist; the deploy stage would update the services with the new task revision and shift traffic accordingly.
 
 ---
 
@@ -110,7 +110,7 @@ The pipeline injects the actual task definition ARN when it creates or selects t
 | **CodeBuild**    | Runs the buildspec; builds and pushes Docker images to ECR. |
 | **ECR**          | Stores Docker images for customer-service and employee-service. |
 | **ECS**          | Runs the tasks (Fargate or EC2) for both services. |
-| **CodeDeploy**   | Performs ECS blue/green (or rolling) deployments using the AppSpecs. |
+| **CodeDeploy**   | Performs ECS blue/green deployments using the AppSpecs. |
 | **ALB**          | Routes traffic (e.g. `/`, `/suppliers` → customer-service:3000; `/admin/suppliers` → employee-service:3001). |
 | **IAM**          | Roles for CodeBuild (ECR push) and CodePipeline/CodeDeploy (ECS, ECR pull). |
 

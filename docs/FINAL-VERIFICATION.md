@@ -2,7 +2,7 @@
 
 ## 1. Verification Objective
 
-Confirm that both Node.js microservices (customer-service and employee-service) run correctly locally and under Docker Compose, that all required endpoints respond as designed, and that the setup is ready for ECR, ECS, and pipeline integration.
+Confirm that both Node.js microservices (customer-service and employee-service) run correctly locally and under Docker Compose, that all required endpoints respond as designed, and that the local setup is validated and ready to move into ECR, ECS, and pipeline integration work.
 
 ---
 
@@ -31,20 +31,19 @@ Confirm that both Node.js microservices (customer-service and employee-service) 
 | `/health`          | GET    | Pass   |
 | `/admin/suppliers` | GET    | Pass   |
 
-All endpoints returned expected status and content.
+All endpoints returned the expected responses during local and container-based verification.
 
 ---
 
 ## 4. Docker Compose Verification
 
+From the repository root, the following command was run:
+
 ```bash
 docker compose up --build -d
 ```
 
-- **customer-service** — Built from `services/customer-service`; container port 3000 mapped to host 3000.
-- **employee-service** — Built from `services/employee-service`; container port 3001 mapped to host 3001.
-
-Same endpoints tested at `http://localhost:3000` and `http://localhost:3001`; behavior matched local runs. Containers stopped with `docker compose down`; no errors.
+**Outcome:** Both images built successfully; both containers started and remained reachable. **customer-service** was built from `services/customer-service` with container port 3000 mapped to host 3000. **employee-service** was built from `services/employee-service` with container port 3001 mapped to host 3001. The same endpoints were exercised against the running containers at `http://localhost:3000` and `http://localhost:3001`; responses matched the local (non-container) verification. Containers were stopped with `docker compose down`; no errors were reported.
 
 ---
 
@@ -78,7 +77,7 @@ A local Node process was already listening on port **3001**. Docker Compose maps
 | Docker Compose          | Pass   | Both containers run after resolving port 3001 conflict. |
 | Endpoint parity         | Pass   | Container behavior matches local behavior. |
 
-Verification complete. System ready for ECR push, ECS task definitions, and pipeline integration.
+Local and container verification is complete. The project is ready to proceed to ECR publishing, ECS task definition alignment, and CI/CD integration.
 
 ---
 
