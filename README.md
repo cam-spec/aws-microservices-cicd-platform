@@ -15,6 +15,29 @@ Local helper scripts (PowerShell) are provided:
 - `scripts/smoke-test.ps1` — hit all six endpoints and report PASS/FAIL
 - `scripts/stop-local.ps1` — stop containers (`docker compose down`)
 
+
+## Tech Stack
+
+Node.js  
+Docker  
+Docker Compose  
+AWS ECS  
+AWS ECR  
+Application Load Balancer  
+AWS CodeBuild  
+AWS CodeDeploy  
+AWS CodePipeline  
+
+## What This Demonstrates
+
+- Microservices architecture design  
+- Containerization with Docker  
+- Infrastructure organisation for cloud deployments  
+- CI/CD pipelines for automated deployments  
+- AWS ECS container orchestration  
+- Load balancing with Application Load Balancer  
+- End-to-end system documentation
+
 ## Architecture
 
 This project demonstrates the redesign of a monolithic Node.js supplier application into containerized microservices deployed on AWS using Amazon ECS, Amazon ECR, an Application Load Balancer, and automated CI/CD pipelines.
