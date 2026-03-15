@@ -31,6 +31,8 @@ The final architecture illustrates how the system runs on AWS using containerize
 
 ![AWS Microservices Architecture](docs/architecture/aws-microservices-architecture.png)
 
+In production, **customer-service** runs on port 3000 and **employee-service** on port 3001; both are containerized with Docker and run on Amazon ECS. An Application Load Balancer routes requests to the appropriate service by path. Deployments are automated via **CodePipeline** (orchestration) and **CodeDeploy** (ECS blue/green).
+
 ## Quick Start
 
 From the repository root (Windows/PowerShell):
