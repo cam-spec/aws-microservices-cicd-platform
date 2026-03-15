@@ -6,7 +6,37 @@ This document describes the CI/CD pipeline for the **aws-microservices-ci-cd-pip
 
 ---
 
-## 2. Pipeline Objective
+## 2. Pipeline Architecture
+
+End-to-end flow from developer commit to end users:
+
+**Developer Commit → CodePipeline → CodeBuild → ECR → CodeDeploy/ECS → ALB → End Users.**
+
+```
+  Developer Commit
+         │
+         ▼
+  CodePipeline (orchestrates stages)
+         │
+         ▼
+  CodeBuild (Docker build & push)
+         │
+         ▼
+  ECR (container registry)
+         │
+         ▼
+  CodeDeploy / ECS (blue/green deployment)
+         │
+         ▼
+  ALB (path-based routing)
+         │
+         ▼
+  End Users
+```
+
+---
+
+## 3. Pipeline Objective
 
 The pipeline aims to:
 
@@ -20,7 +50,7 @@ Each run is tied to a specific source revision so that builds and deployments ar
 
 ---
 
-## 3. Services Included
+## 4. Services Included
 
 | Service             | Port | Endpoints |
 |---------------------|------|-----------|
@@ -31,7 +61,7 @@ Both services expose a root, a health endpoint (JSON), and a domain route. Local
 
 ---
 
-## 4. CI/CD Workflow
+## 5. CI/CD Workflow
 
 1. **Source** — CodePipeline connects to the repo (e.g. GitHub or CodeCommit), watches a branch (typically `main`), and clones the repository into the build environment on each run.
 2. **Build** — CodeBuild runs `cicd/buildspec.yml`: ECR login, Docker build for both services, tag with commit SHA and `latest`, push to ECR, and write `build/imagedefinitions.json`.
@@ -42,7 +72,7 @@ Flow: **Source → Build → Deploy**. In the intended AWS pipeline flow, the ha
 
 ---
 
-## 5. Build Stage
+## 6. Build Stage
 
 The build stage runs on **AWS CodeBuild** and is defined in **`cicd/buildspec.yml`** (version 0.2). It has four phases:
 
@@ -53,9 +83,24 @@ The build stage runs on **AWS CodeBuild** and is defined in **`cicd/buildspec.ym
 
 The only artifact is `build/imagedefinitions.json`; it is consumed by the deployment stage to update ECS services.
 
+**Example `imagedefinitions.json`** (commit-based tag; account/region placeholders):
+
+```json
+[
+  {
+    "name": "customer-service",
+    "imageUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/customer-service:abc1234"
+  },
+  {
+    "name": "employee-service",
+    "imageUri": "123456789012.dkr.ecr.us-east-1.amazonaws.com/employee-service:abc1234"
+  }
+]
+```
+
 ---
 
-## 6. ECR Image Push Stage
+## 7. ECR Image Push Stage
 
 After the build phase, both images are pushed to **Amazon ECR**:
 
@@ -67,7 +112,7 @@ The push is part of the buildspec’s `post_build` phase. The result is two ECR 
 
 ---
 
-## 7. Deployment Stage
+## 8. Deployment Stage
 
 In the intended design, the deployment stage uses the build artifact and the AppSpec files to update **Amazon ECS**:
 
@@ -79,7 +124,7 @@ The design assumes ECS services and ALB target groups already exist; the deploy 
 
 ---
 
-## 8. Role of buildspec.yml
+## 9. Role of buildspec.yml
 
 **`cicd/buildspec.yml`** is the single source of truth for the CodeBuild job. It:
 
@@ -91,7 +136,7 @@ Because the buildspec lives in the repo, build behavior is versioned and reviewa
 
 ---
 
-## 9. Role of AppSpec Files
+## 10. Role of AppSpec Files
 
 **AppSpec** files tell CodeDeploy how to deploy to ECS. CodeDeploy allows only **one TargetService per AppSpec**, so this project uses two files (both with **version 0.0**, as required for ECS):
 
@@ -102,7 +147,7 @@ The pipeline injects the actual task definition ARN when it creates or selects t
 
 ---
 
-## 10. AWS Services Involved
+## 11. AWS Services Involved
 
 | Service        | Role |
 |----------------|------|
@@ -118,7 +163,7 @@ VPC, security groups, and optionally Parameter Store or Secrets Manager are used
 
 ---
 
-## 11. Verification Status
+## 12. Verification Status
 
 **Local and Docker (completed):**
 
@@ -136,7 +181,7 @@ See `docs/FINAL-VERIFICATION.md` for detailed verification notes, including the 
 
 ---
 
-## 12. Reconstruction Notes and Assumptions
+## 13. Reconstruction Notes and Assumptions
 
 The pipeline artifacts were **reconstructed** from:
 
@@ -154,7 +199,19 @@ Assumptions:
 
 ---
 
-## 13. Future Improvements
+## 14. Pipeline Failure Behavior
+
+When a build or deployment fails, the pipeline stops at that stage and does not proceed. Understanding this behavior helps with debugging and ensures users are not served broken changes.
+
+- **Build failure** — If CodeBuild fails (e.g. Docker build error, ECR push failure, or a failing test added to the build), the pipeline marks the build stage as failed. No new images are pushed for that run, and the deploy stage does not execute. Existing ECS tasks are unchanged; end users continue to be served by the last successfully deployed revision.
+
+- **Deploy failure** — If CodeDeploy fails (e.g. new tasks fail health checks, or a deployment is stopped), CodeDeploy does not shift traffic to the new tasks. The previous ECS task set continues to receive traffic from the ALB, so end users keep using the last known-good version. The pipeline run is marked failed, and the failed deployment can be investigated or rolled back via the CodeDeploy console.
+
+- **Traffic retention** — CodeDeploy's ECS blue/green behavior keeps the original (blue) tasks in service until the new (green) tasks are healthy and traffic is shifted. If the green deployment fails or is stopped, the blue tasks remain the active target of the ALB. This avoids serving broken or partially updated containers to end users.
+
+---
+
+## 15. Future Improvements
 
 - **Parameter Store / Secrets Manager** — Move ECR repo names or image tag overrides into parameters for multi-account or multi-environment use.
 - **Tests in build** — Run unit or integration tests (e.g. `npm test`) in the build phase and fail the build on failure.
