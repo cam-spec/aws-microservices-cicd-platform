@@ -1,0 +1,12 @@
+# AppSpec for employee-service ECS blue/green deployment (CodeDeploy).
+# TaskDefinition is provided by CodePipeline at deploy time.
+version: 0.0
+
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "<EMPLOYEE_SERVICE_TASK_DEFINITION_ARN>"
+        LoadBalancerInfo:
+          ContainerName: "employee-service"
+          ContainerPort: 3001

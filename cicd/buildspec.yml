@@ -1,6 +1,63 @@
 version: 0.2
 
+env:
+  variables:
+    ECR_REPO_CUSTOMER: "customer-service"
+    ECR_REPO_EMPLOYEE: "employee-service"
+  exported-variables:
+    - IMAGE_TAG
+
 phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Verifying Docker availability..."
+      - docker --version
+      - echo "Install phase completed."
+
+  pre_build:
+    commands:
+      - echo "Preparing build variables..."
+      - export IMAGE_TAG=${IMAGE_TAG:-$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)}
+      - echo "Image tag set to $IMAGE_TAG"
+      - export ECR_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URI
+
   build:
     commands:
-      - echo Build phase placeholder
+      - echo "Building customer-service image..."
+      - docker build -t $ECR_URI/$ECR_REPO_CUSTOMER:$IMAGE_TAG -t $ECR_URI/$ECR_REPO_CUSTOMER:latest ./services/customer-service
+      - echo "Building employee-service image..."
+      - docker build -t $ECR_URI/$ECR_REPO_EMPLOYEE:$IMAGE_TAG -t $ECR_URI/$ECR_REPO_EMPLOYEE:latest ./services/employee-service
+      - echo "Build phase completed."
+
+  post_build:
+    commands:
+      - echo "Pushing customer-service images..."
+      - docker push $ECR_URI/$ECR_REPO_CUSTOMER:$IMAGE_TAG
+      - docker push $ECR_URI/$ECR_REPO_CUSTOMER:latest
+      - echo "Pushing employee-service images..."
+      - docker push $ECR_URI/$ECR_REPO_EMPLOYEE:$IMAGE_TAG
+      - docker push $ECR_URI/$ECR_REPO_EMPLOYEE:latest
+      - echo "Generating ECS deployment artifact..."
+      - mkdir -p build
+      - |
+        cat > build/imagedefinitions.json << EOF
+        [
+          {"name":"customer-service","imageUri":"$ECR_URI/$ECR_REPO_CUSTOMER:$IMAGE_TAG"},
+          {"name":"employee-service","imageUri":"$ECR_URI/$ECR_REPO_EMPLOYEE:$IMAGE_TAG"}
+        ]
+        EOF
+      - echo "Generated artifact:"
+      - cat build/imagedefinitions.json
+
+artifacts:
+  files:
+    - build/imagedefinitions.json
+  name: build-output
+
+cache:
+  paths:
+    - '/root/.npm/**/*'
