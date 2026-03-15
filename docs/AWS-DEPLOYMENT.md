@@ -48,7 +48,7 @@ Images are built once per pipeline run and stored in ECR; the same image URIs ar
 
 - **Two ECS services** — One for customer-service, one for employee-service. Each service runs tasks from a task definition that specifies the container image (from ECR), container name (`customer-service` or `employee-service`), and container port (3000 or 3001).
 - **Task definitions** — Container names and ports must match the AppSpecs and ALB target groups: customer-service on 3000, employee-service on 3001. The pipeline injects the new image URI (from `imagedefinitions.json`) when creating a new task definition revision.
-- **CodeDeploy** — Each ECS service is deployed via CodeDeploy using a separate AppSpec (`appspec.yaml` for customer-service, `appspec-employee.yaml` for employee-service). Each AppSpec has one TargetService: task definition and LoadBalancerInfo (container name and port). CodeDeploy shifts traffic from the old task set to the new one (blue/green or rolling).
+- **CodeDeploy** — Each ECS service is deployed via CodeDeploy using a separate AppSpec (`appspec-customer.yaml` for customer-service on port 3000, `appspec-employee.yaml` for employee-service on port 3001). AppSpecs use version 0.0 (required for ECS). Each AppSpec has one TargetService: task definition and LoadBalancerInfo (container name and port). CodeDeploy shifts traffic from the old task set to the new one (blue/green or rolling).
 
 The pipeline assumes ECS cluster, services, and task definitions (or a mechanism to create them) exist; the deploy stage updates the services with the new revision and performs the traffic shift.
 

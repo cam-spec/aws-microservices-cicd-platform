@@ -32,11 +32,11 @@ aws-microservices-ci-cd-pipeline/
 │       ├── package.json
 │       └── Dockerfile
 ├── docker-compose.yml
-├── cicd/
+├── cicd/                 # buildspec.yml, appspec-customer.yaml, appspec-employee.yaml
 └── docs/
 ```
 
-Each service has its own `package.json`, `index.js`, and `Dockerfile`. The repo root contains `docker-compose.yml` for running both services with Docker.
+Each service has its own `package.json`, `index.js`, and `Dockerfile`. The repo root contains `docker-compose.yml` for running both services with Docker. The `cicd/` directory holds the pipeline artifacts (buildspec and AppSpecs) for AWS deployment; see `docs/CICD-PIPELINE.md`.
 
 ---
 

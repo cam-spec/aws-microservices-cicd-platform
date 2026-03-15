@@ -95,7 +95,7 @@ Screenshots or log excerpts can be added here for portfolio or audit use.
 ## 10. Next Phase
 
 1. **ECR** — Create repositories; push images (or run CodeBuild buildspec) to validate ECR.
-2. **ECS** — Finalize task definitions (container names and ports aligned with AppSpecs); run services on ECS.
+2. **ECS** — Finalize task definitions (container names and ports aligned with `cicd/appspec-customer.yaml` and `cicd/appspec-employee.yaml`); run services on ECS.
 3. **ALB** — Configure listener rules: `/` and `/suppliers` → customer-service:3000; `/admin/suppliers` → employee-service:3001.
 4. **Pipeline** — Connect CodePipeline to the repo; run build and deploy to confirm end-to-end CI/CD.
 

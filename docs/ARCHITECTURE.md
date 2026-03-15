@@ -107,7 +107,7 @@ Health checks use `/health` on each service (3000 and 3001). The ALB listener ru
 
 - **Source** — Pipeline pulls from the repo (e.g. GitHub). The same codebase produces both service images.
 - **Build** — CodeBuild runs `cicd/buildspec.yml`: builds both Docker images, tags with commit SHA and `latest`, pushes to ECR, writes `build/imagedefinitions.json` with image URIs by service name. The artifact is the only handoff to deploy.
-- **Deploy** — Pipeline uses `imagedefinitions.json` to create or update ECS task definition revisions, then CodeDeploy runs per ECS service using `cicd/appspec.yaml` (customer-service) and `cicd/appspec-employee.yaml` (employee-service). AppSpecs define the target ECS service, task definition, and load balancer mapping (container name and port). Traffic shifts to the new tasks.
+- **Deploy** — Pipeline uses `imagedefinitions.json` to create or update ECS task definition revisions, then CodeDeploy runs per ECS service using `cicd/appspec-customer.yaml` (customer-service, port 3000) and `cicd/appspec-employee.yaml` (employee-service, port 3001). AppSpecs use version 0.0 (required for ECS) and define the target ECS service, task definition, and load balancer mapping (container name and port). Traffic shifts to the new tasks.
 
 CI/CD does not change the runtime architecture (two services, two ports, path-based routing); it automates building, registry push, and ECS deployment so that each pipeline run produces a consistent, traceable deploy.
 
