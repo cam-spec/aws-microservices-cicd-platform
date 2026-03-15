@@ -22,7 +22,24 @@ The project prioritizes clarity of deployment flow and DevOps practices rather t
 
 ---
 
-## 3. System Components
+## 3. Runtime Request Flow
+
+Traffic from clients reaches the two services via the Application Load Balancer:
+
+```
+Client
+  │
+  ▼
+Application Load Balancer
+  │
+  ├── Customer Service (ECS, port 3000)
+  │
+  └── Employee Service (ECS, port 3001)
+```
+
+---
+
+## 4. System Components
 
 | Component | Role |
 |-----------|------|
@@ -38,7 +55,7 @@ The project prioritizes clarity of deployment flow and DevOps practices rather t
 
 ---
 
-## 4. Service Responsibilities
+## 5. Service Responsibilities
 
 ### customer-service (port 3000)
 
@@ -56,7 +73,7 @@ Separation allows independent scaling, clearer security boundaries, and separate
 
 ---
 
-## 5. Local Architecture
+## 6. Local Architecture
 
 - **Runtime** — Node.js (e.g. 20); each service runs via `npm start` or `node index.js`.
 - **Ports** — customer-service on 3000, employee-service on 3001. Ports are configurable via `process.env.PORT` with these defaults.
@@ -66,7 +83,7 @@ Separation allows independent scaling, clearer security boundaries, and separate
 
 ---
 
-## 6. Intended AWS Deployment Architecture
+## 7. Intended AWS Deployment Architecture
 
 Deployment flow: **CodePipeline → CodeBuild → ECR → ECS → ALB → External Clients.**
 
@@ -96,7 +113,7 @@ Deployment flow: **CodePipeline → CodeBuild → ECR → ECS → ALB → Extern
 
 ---
 
-## 7. Request Routing
+## 8. Request Routing
 
 | Path | Target service | Port | Purpose |
 |------|----------------|------|---------|
@@ -108,7 +125,7 @@ Health checks use `/health` on each service (3000 and 3001). The ALB listener ru
 
 ---
 
-## 8. CI/CD Relationship to Architecture
+## 9. CI/CD Relationship to Architecture
 
 - **Source** — Pipeline pulls from the repo (e.g. GitHub). The same codebase produces both service images.
 - **Build** — CodeBuild runs `cicd/buildspec.yml`: builds both Docker images, tags with commit SHA and `latest`, pushes to ECR, writes `build/imagedefinitions.json` with image URIs by service name. The artifact is the only handoff to deploy.
@@ -118,7 +135,7 @@ CI/CD does not change the runtime architecture (two services, two ports, path-ba
 
 ---
 
-## 9. Design Decisions
+## 10. Design Decisions
 
 - **Two services, two ports** — Clear boundary between customer-facing and admin; simplifies routing and future scaling.
 - **Single repo, two images** — One codebase and one pipeline; both images built and tagged together from the same commit.
@@ -129,7 +146,7 @@ CI/CD does not change the runtime architecture (two services, two ports, path-ba
 
 ---
 
-## 10. Assumptions
+## 11. Assumptions
 
 - ECR repositories exist for both services in the same account/region as the pipeline.
 - ECS cluster, service definitions, task definitions (with container names `customer-service` and `employee-service` and ports 3000 and 3001), and ALB with target groups and listener rules are created outside the pipeline or by separate automation.
@@ -140,7 +157,7 @@ CI/CD does not change the runtime architecture (two services, two ports, path-ba
 ---
 
 
-## 11. Scalability Considerations
+## 12. Scalability Considerations
 
 The architecture allows independent scaling of the two services.
 
@@ -153,7 +170,7 @@ ECS services can increase or decrease the number of running tasks automatically 
 
 The ALB distributes requests across healthy tasks in each target group, allowing horizontal scaling without changes to the application code.
 
-## 12. Future Architectural Improvements
+## 13. Future Architectural Improvements
 
 - **API Gateway** — Optional front door for versioning, throttling, or request validation before the ALB.
 - **Service-to-service** — If employee-service or customer-service need to call each other, introduce service discovery (e.g. Cloud Map) or internal ALB/route patterns and document the new flows.

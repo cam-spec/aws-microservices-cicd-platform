@@ -1,7 +1,37 @@
 # AWS Microservices CI/CD Pipeline
 
 ## Overview
-This project rebuilds an AWS microservices and CI/CD lab using a cleaner production-style structure. The repository also documents the project built in phases; each phase folder contains notes, decisions, and artefacts (diagrams, configuration, scripts) produced during implementation.
+
+This is a **Node.js microservices** project with two services:
+
+- **customer-service** runs on port **3000** (public supplier views and APIs).
+- **employee-service** runs on port **3001** (admin supplier management).
+
+The stack includes **Docker**, **Docker Compose**, and AWS: **ECS**, **ECR**, **CodeBuild**, **CodeDeploy**, and **CodePipeline** for container build and deployment.
+
+Local helper scripts (PowerShell) are provided:
+
+- `scripts/run-local.ps1` — build and start both services with Docker Compose
+- `scripts/smoke-test.ps1` — hit all six endpoints and report PASS/FAIL
+- `scripts/stop-local.ps1` — stop containers (`docker compose down`)
+
+## Quick Start
+
+From the repository root (Windows/PowerShell):
+
+```powershell
+# Start both services (build and run in background)
+docker compose up --build -d
+
+# Or use the helper script (same as above, then prints URLs)
+.\scripts\run-local.ps1
+
+# Verify all endpoints
+.\scripts\smoke-test.ps1
+
+# Stop services
+.\scripts\stop-local.ps1
+```
 
 ## Architecture Summary
 
