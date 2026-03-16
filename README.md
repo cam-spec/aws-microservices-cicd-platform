@@ -158,3 +158,6 @@ docker compose up --build -d
 - Add ECR notes
 - Add ALB routing notes
 - Add CI/CD deployment structure
+
+##📄 Full Architecture Case Study  
+See detailed breakdown here → docs/case-study.md
