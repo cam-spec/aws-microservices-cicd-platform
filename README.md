@@ -159,5 +159,5 @@ docker compose up --build -d
 - Add ALB routing notes
 - Add CI/CD deployment structure
 
-##📄 Full Architecture Case Study  
+📄 ##Full Architecture Case Study  
 See detailed breakdown here → docs/case-study.md
